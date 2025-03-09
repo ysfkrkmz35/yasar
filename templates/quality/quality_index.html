@@ -1,0 +1,49 @@
+{% extends "base_site.html" %}
+{% load i18n static yasar_filters %}
+
+<link rel="stylesheet" type="text/css" href="{% static " admin/css/dashboard.css" %}" />
+
+{% block viewsite %}{% endblock %}
+
+{% block breadcrumbs_lvl1 %}
+    <a title="Üniversite giriş sayfası için tıkla." href="/">{% trans 'Üniversite' %} &rsaquo;</a>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="app- module">
+        <h2>Kalite Sistemi'ne Hoş Geldiniz...</h2>
+        <h4>
+            <table width="100%" border="1">
+                <tr>
+                    <td border="0" style="padding:0">
+                        <table width="100%" border="0">
+                            {% if user|is_emp_sup %}
+                                <tr>
+                                    <td border="0" align="left">
+                                        <a title="Çalışan Listesi için tıkla." href="/yasar/employee_index/">Çalışanlar</a>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </table>
+                    </td>
+                    <td border="0" style="padding:0">
+                        <table width="100%" border="0">
+                            <tr border-style:none;>
+                                <td border="none"align="center">
+                                    <i>Hazırlık Çalışmaları Sürüyor...</i>
+                                </td>
+                            </tr>
+                            <tr border-style:none;>
+                                <td border-style:none;>
+                                    <img width="100%" src="{% static "quality/images/quality.jpg" %}" alt="Hizmetler"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </h4>
+    </div>
+</div>
+{% endblock %}

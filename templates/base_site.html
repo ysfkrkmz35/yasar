@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load i18n static yasar_filters %}
+
+{% block title %}Yaşar Üniversitesi{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <style>
+    /* Logo boyutunu küçültelim */
+    .site-logo {
+      height: 50px;
+      max-height: 50px;
+    }
+  </style>
+{% endblock %}
+
+{% block branding %}
+  <img src="{% static 'yasar/images/logo.png' %}" 
+       alt="{% trans 'Yaşar Üniversitesi Logosu' %}"
+       class="site-logo">
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <!-- Harici sidebar.js dosyasını ekliyoruz -->
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock %}

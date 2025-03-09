@@ -1,0 +1,42 @@
+{% extends "base_site.html" %}
+
+{% block content %}
+<h2>Karar Güncelle</h2>
+
+<form id="update-decision-form" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div>
+    <select id="decision-status" name="decision_status" required>
+        <option value="completed_later">Sonradan Tamamlandı</option>
+        <option value="cancelled_later">Sonradan İptal Edildi</option>
+    </select>
+    </div>
+    <div>
+        <label for="finished_date">Tamamlanma Tarihi:</label>
+        <input type="datetime-local" id="finished_date" name="finished_date" value="{{ decision.decision_finished_date|date:'Y-m-d\\TH:i' }}" required>
+    </div>
+    <div>
+        <label for="finish_text">Tamamlanma Yazısı:</label>
+        <textarea id="finish_text" name="finish_text" required>{{ decision.decision_finish_text }}</textarea>
+    </div>
+    <div>
+        <label for="evidence_file">Kanıt Dosyası:</label>
+        <input type="file" id="evidence_file" name="evidence_file">
+    </div>
+    <button type="submit" class="btn btn-success">Güncelle</button>
+    <a href="{% url 'view_decisions' %}" class="btn btn-secondary">İptal</a>
+</form>
+
+<script>
+    document.getElementById('update-decision-form').addEventListener('submit', function(event) {
+        const finishedDateInput = document.getElementById('finished_date');
+        const takenDate = new Date("{{ decision.decision_taken_date|date:'Y-m-d\\TH:i' }}");
+        const finishedDate = new Date(finishedDateInput.value);
+
+        if (takenDate.getTime() === finishedDate.getTime()) {
+            alert("Tamamlanma tarihi alınma tarihi ile aynı olamaz!");
+            event.preventDefault(); // Formun gönderilmesini engelle
+        }
+    });
+</script>
+{% endblock %}

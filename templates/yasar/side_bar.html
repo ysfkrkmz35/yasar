@@ -1,0 +1,39 @@
+<div class="p-3">
+  <h5 class="text-center">Menü</h5>
+  <ul class="list-group">
+    <li class="list-group-item">
+      <a class="text-decoration-none" href="/quality/quality_index/">Kalite</a>
+    </li>
+    <li class="list-group-item">
+      <a class="text-decoration-none" href="/units/">Birimler</a>
+    </li>
+    {% if user.employee.can_create_group or user.is_superuser %}
+    <li class="list-group-item">
+      <a class="text-decoration-none" href="{% url 'create_group' %}">Yeni Grup Kur</a>
+    </li>
+    {% endif %}
+    <li class="list-group-item">
+      <a class="text-decoration-none" href="{% url 'view_groups' %}">Grupları Gör</a>
+    </li>
+    {% if user_can_create_report %}
+    <li class="list-group-item">
+      <a class="text-decoration-none" href="{% url 'create_meeting' %}">Yeni Toplantı Oluştur</a>
+    </li>
+    {% else %}
+    <li class="list-group-item text-danger">
+      Kullanıcının toplantı oluşturma yetkisi yok.
+    </li>
+    {% endif %}
+    <li class="list-group-item">
+      <a class="text-decoration-none" href="{% url 'view_meetings' %}">Toplantıları Gör</a>
+    </li>
+    <li class="list-group-item">
+      <a class="text-decoration-none" href="{% url 'view_decisions' %}">Kararları Gör</a>
+    </li>
+    {% if user.is_superuser %}
+    <li class="list-group-item">
+      <a class="text-decoration-none" href="/admin/">Admin Sayfası</a>
+    </li>
+    {% endif %}
+  </ul>
+</div>

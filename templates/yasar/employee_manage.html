@@ -1,0 +1,78 @@
+{% extends "base_site.html" %}
+{% load i18n static yasar_filters %}
+
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/dashboard.css" %}" />
+
+{% block breadcrumbs_lvl1 %}
+    <a title="Üniversite giriş sayfası için tıkla." href="/">{% trans 'Üniversite' %} &rsaquo;</a>
+    {% block breadcrumbs_lvl2 %}
+        <a title="Kalite sayfası için tıkla." href="/quality/quality_index/">{% trans 'Kalite' %} &rsaquo;</a>
+        {% block breadcrumbs_lvl3 %}
+            <a title="Çalışanlar için tıkla." href="/yasar/employee_index/">{% trans 'Çalışanlar' %} &rsaquo;</a>
+        {% endblock %}
+    {% endblock %}
+{% endblock %}
+
+{% block content %}
+    {% if form.errors and not form.non_field_errors %}
+        <p class="errornote">
+            {% if form.errors.items|length == 1 %}{% trans "Please correct the error below." %}{% else %}{% trans "Please correct the errors below." %}{% endif %}
+            {% for error in form.errors %}
+                {{ error }}
+            {% endfor %}
+        </p>
+    {% endif %}
+    <form id="employee_form" method="post"> {% csrf_token %}
+        <div class="app- module">
+            {% if action == 'CREATE' %}
+                <h2>Yeni Çalışan Bilgileri</h2>
+            {% elif action == 'EDIT' %}
+                <h2>Çalışan Bilgilerini Değiştir</h2>
+            {% else %}
+                <h2>Çalışan Bilgileri</h2>
+            {% endif %}
+            <table width="100%">
+                <tbody>
+                    <!-- ÇALIŞAN -->
+                    {% include "../yasar/member_manage.html" %}
+                    <!-- BUTONLAR -->
+                    {% if action == 'CREATE' %}
+                        {% if user|is_emp_mgr %}
+                            <tr>
+                                <td style="padding:2px; text-align:left; vertical-align:middle;">
+                                    <input type="submit" value="SAKLA" style="background-color:#447e9b;"/>
+                                </td>
+                                <td style="padding:2px; text-align:left; vertical-align:middle;">
+                                    <a href="/yasar/employee_index"><input type="button" value="İPTAL" style="background-color:red;"/></a>
+                                </td>
+                                <td colspan="100" style="padding:2px;"></td>
+                            </tr>
+                        {% endif %}
+                    {% elif action == 'EDIT' %}
+                        {% if user|is_emp_mgr %}
+                            <tr>
+                                <td style="padding:2px;">
+                                    <input type="submit" value="SAKLA" style="background-color:#447e9b;"/>
+                                </td>
+                                <td style="padding:2px;">
+                                    <a href="/yasar/employee_manage?employee_id={{ member.id }}&action=VIEW"><input type="button" value="İPTAL" style="background-color:red;"/></a>
+                                </td>
+                                <td colspan="100" style="padding:2px;"></td>
+                            </tr>
+                        {% endif %}
+                    {% else %}
+                        {% if user|is_emp_mgr %}
+                            <tr>
+                                <td style="padding:2px;">
+                                    <a href="/yasar/employee_manage?employee_id={{ member.id }}&action=EDIT"><input type="button" value="DÜZENLE" style="color:black; background-color:orange;"/></a>
+                                </td>
+                                <td colspan="100" style="padding:2px;"></td>
+                            </tr>
+                        {% endif %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </form>
+{% endblock %}
+

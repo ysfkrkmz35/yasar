@@ -1,0 +1,24 @@
+{% extends "base_site.html" %}
+{% load i18n static yasar_filters %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/dashboard.css' %}" />
+
+{% block viewsite %}{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div id="content-main" class="container">
+    <div class="app-module">
+        <h2>Yaşar Üniversitesi'ne Hoş Geldiniz...</h2>
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <i>Hazırlık Çalışmaları Sürüyor...</i>
+            </div>
+            <div class="col-md-6">
+                <img class="img-fluid" src="{% static 'yasar/images/uni.jpg' %}" alt="Site">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

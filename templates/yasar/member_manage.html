@@ -1,0 +1,57 @@
+{% load i18n static yasar_filters %}
+
+<!-- ÜYE -->
+<tr>
+    <td style="padding:2px; width:80px; text-align:left; vertical-align:middle;"><strong>Kullanıcı: </strong></td>
+    {% if action == 'CREATE' %}
+        <td style="padding:2px; min-width:200px;">{{ form.user }}</td>
+        <td hidden>{{ form.first_name }}</td>
+        <td hidden>{{ form.last_name }}</td>
+    {% elif action == 'EDIT' %}
+        <td style="padding:2px; min-width:200px;">{{ member }}</td>
+        <td hidden>{{ form.user }}</td>
+        <td hidden>{{ form.first_name }}</td>
+        <td hidden>{{ form.last_name }}</td>
+    {% else %}
+        <td style="padding:2px; min-width:200px;">{{ member }}</td>
+    {% endif %}
+    <td colspan="100" style="padding:2px;"></td>
+<tr>
+    <td style="padding:2px; width:80px; text-align:left; vertical-align:middle;"><strong>Telefon: </strong></td>
+    {% if action == 'CREATE' %}
+        <td style="padding:2px; min-width:200px;">+{{ form.phone_country }} {{ form.phone_part2 }} {{ form.phone_part3 }} {{ form.phone_part4 }}</td>
+    {% elif action == 'EDIT' %}
+        {% if user|is_mbr_sup:member_type %}
+        <td style="padding:2px; min-width:200px;">+{{ form.phone_country }} {{ form.phone_part2 }} {{ form.phone_part3 }} {{ form.phone_part4 }}</td>
+        {% else %}
+            <td hidden>{{ form.phone_country }}</td>
+            <td hidden>{{ form.phone_part2 }}</td>
+            <td hidden>{{ form.phone_part3 }}</td>
+            <td hidden>{{ form.phone_part4 }}</td>
+            <td style="padding:2px; min-width:200px;"><fieldset disabled>+{{ form.phone_country }} {{ form.phone_part2 }} {{ form.phone_part3 }} {{ form.phone_part4 }}</fieldset></td>
+        {% endif %}
+    {% else %}
+        {% if member.phone_country is not None and member.phone_part2 is not None and member.phone_part3 is not None and member.phone_part4 is not None %}
+            <td style="padding:2px; min-width:200px;">+{{ member.phone_country }} {{ member.phone_part2 }} {{ member.phone_part3 }} {{ member.phone_part4 }}</td>
+        {% else %}
+            <td style="padding:2px; min-width:200px;">-</td>
+        {% endif %}
+    {% endif %}
+    <td colspan="100" style="padding:2px;"></td>
+</tr>
+<tr>
+    <td style="padding:2px; width:80px; text-align:left; vertical-align:middle;"><strong>Yetkinlik: </strong></td>
+    {% if action == 'CREATE' %}
+        <td style="padding:2px; min-width:200px;">{{ form.role }}</td>
+    {% elif action == 'EDIT' %}
+        {% if user|is_mbr_mgr:member_type %}
+            <td style="padding:2px; min-width:200px;">{{ form.role }}</td>
+        {% else %}
+            <td hidden>{{ form.role }}</td>
+            <td style="padding:2px; min-width:200px;"><fieldset disabled>{{ form.role }}</fieldset></td>
+        {% endif %}
+    {% else %}
+        <td style="padding:2px; min-width:200px;">{{ PRMS.AUT_LVLS|get_from_tuple:member.role }}</td>
+    {% endif %}
+    <td colspan="100" style="padding:2px;"></td>
+</tr>

@@ -1,0 +1,212 @@
+{% extends "base_site.html" %}
+
+{% block content %}
+<div id="content-main" class="container-fluid p-2">
+  <h2 class="text-center mb-3">Katıldığınız Toplantılar</h2>
+
+  <!-- Arama Formu Kartı (Tam Genişlikte, Yatay Dizi) -->
+  <div class="card mb-3 rounded shadow">
+    <div class="card-header bg-primary text-white py-1">
+      <h4 class="mb-0" style="font-size: 1.25rem;">Arama Yap</h4>
+    </div>
+    <div class="card-body py-2">
+      <form method="GET" action="{% url 'view_meetings' %}">
+        <div class="row align-items-center">
+          <div class="col-md-3">
+            <label for="meeting_name" class="form-label" style="margin-bottom: 0.25rem;">Toplantı Adı:</label>
+            <input type="text" id="meeting_name" name="meeting_name" class="form-control" placeholder="Toplantı Adı" value="{{ meeting_name_query }}">
+          </div>
+          <div class="col-md-3">
+            <label for="start_date" class="form-label" style="margin-bottom: 0.25rem;">Başlangıç Tarihi:</label>
+            <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date_query }}">
+          </div>
+          <div class="col-md-3">
+            <label for="end_date" class="form-label" style="margin-bottom: 0.25rem;">Bitiş Tarihi:</label>
+            <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date_query }}">
+          </div>
+          <div class="col-md-1">
+            <button type="submit" class="btn btn-primary w-100">Ara</button>
+          </div>
+          <div class="col-md-1">
+            <a href="{% url 'view_meetings' %}" class="btn btn-secondary w-100">Temizle</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if search_mode %}
+    <!-- Arama Modu: Düz Listeleme (Tüm filtrelenmiş kayıtlar) -->
+    <div class="card mb-3 rounded shadow">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover table-striped mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>Toplantı Adı</th>
+                <th>Tarih</th>
+                <th>Katılımcılar</th>
+                <th>Kararlar</th>
+                <th>İşlemler</th>
+                <th>Ek Dosya</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for meeting in meetings %}
+                <tr>
+                  <td>
+                    <a href="#" onclick="showPdf({{ meeting.id }})">
+                      {{ meeting.meeting_name }}
+                    </a>
+                  </td>
+                  <td>{{ meeting.date|date:"d/m/Y H:i" }}</td>
+                  <td>
+                    <ul class="mb-0">
+                      {% for attendant in meeting.attendants.all %}
+                        <li>{{ attendant.member.first_name }} {{ attendant.member.last_name }}</li>
+                      {% endfor %}
+                    </ul>
+                  </td>
+                  <td>
+                    <ul class="mb-0">
+                      {% for decision in meeting.decisions.all %}
+                        <li>
+                          <strong>{{ decision.topic_group }}</strong>: {{ decision.decision_text }}
+                          (Durum: {{ decision.get_decision_status_display }})
+                          {% if decision.responsible %}
+                            (Sorumlu: {{ decision.responsible.first_name }} {{ decision.responsible.last_name }})
+                          {% else %}
+                            (Sorumlu: Belirtilmemiş)
+                          {% endif %}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </td>
+                  <td>
+                    <a href="{% url 'download_meeting_pdf' meeting.id %}" class="btn btn-secondary btn-sm">
+                      PDF İndir
+                    </a>
+                  </td>
+                  <td>
+                    {% if meeting.meeting_file %}
+                      <a href="{{ meeting.meeting_file.url }}" class="btn btn-secondary btn-sm" download>Dosyayı İndir</a>
+                    {% else %}
+                      <span>Dosya yok</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6" class="text-center">Toplantı bulunamadı.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <!-- Parent-Child Hiyerarşik Listeleme -->
+    <div class="card mb-3 rounded shadow">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover table-striped mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>Toplantı Adı</th>
+                <th>Tarih</th>
+                <th>Katılımcılar</th>
+                <th>Kararlar</th>
+                <th>İşlemler</th>
+                <th>Ek Dosya</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for meeting in meetings %}
+                {% if not meeting.parent_meeting %}
+                  <tr>
+                    <td>
+                      <a href="#" onclick="showPdf({{ meeting.id }})">
+                        <strong>{{ meeting.meeting_name }}</strong>
+                      </a>
+                    </td>
+                    <td>{{ meeting.date|date:"d/m/Y H:i" }}</td>
+                    <td>
+                      <ul class="mb-0">
+                        {% for attendant in meeting.attendants.all %}
+                          <li>{{ attendant.member.first_name }} {{ attendant.member.last_name }}</li>
+                        {% endfor %}
+                      </ul>
+                    </td>
+                    <td>
+                      <ul class="mb-0">
+                        {% for decision in meeting.decisions.all %}
+                          <li>
+                            <strong>{{ decision.topic_group }}</strong>: {{ decision.decision_text }}
+                            (Durum: {{ decision.get_decision_status_display }})
+                            {% if decision.responsible %}
+                              (Sorumlu: {{ decision.responsible.first_name }} {{ decision.responsible.last_name }})
+                            {% else %}
+                              (Sorumlu: Belirtilmemiş)
+                            {% endif %}
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    </td>
+                    <td>
+                      <a href="{% url 'download_meeting_pdf' meeting.id %}" class="btn btn-secondary btn-sm">
+                        PDF İndir
+                      </a>
+                    </td>
+                    <td>
+                      {% if meeting.meeting_file %}
+                        <a href="{{ meeting.meeting_file.url }}" class="btn btn-secondary btn-sm" download>Dosyayı İndir</a>
+                      {% else %}
+                        <span>Dosya yok</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {# Recursive include: Parent toplantıya ait alt (child) kayıtların listelenmesi #}
+                  {% include "yasar/recursive_meetings.html" with parent_meeting=meeting all_meetings=meetings level=0 %}
+                {% endif %}
+              {% empty %}
+                <tr>
+                  <td colspan="6" class="text-center">Toplantı bulunamadı.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Pop-up Penceresi: Önceki boyutta (ekranın %80'i) -->
+  <div id="pdfModal" class="rounded" style="display: none; position: fixed; top: 10%; left: 10%; width: 80%; height: 80%; background-color: white; border: 1px solid #ccc; z-index: 1000;">
+    <div class="card h-100">
+      <div class="card-header bg-secondary text-white d-flex align-items-center justify-content-between py-2">
+        <h5 class="mb-0">PDF Görüntüleyici</h5>
+        <button onclick="closeModal()" class="btn btn-light btn-sm">Kapat</button>
+      </div>
+      <div class="card-body p-0">
+        <iframe id="pdfViewer" style="width: 100%; height: 100%; border: none;"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arka Plan Kaplama -->
+  <div id="modalBackdrop" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 999;" onclick="closeModal()"></div>
+
+  <script>
+    function showPdf(meetingId) {
+      document.getElementById('pdfModal').style.display = 'block';
+      document.getElementById('modalBackdrop').style.display = 'block';
+      document.getElementById('pdfViewer').src = `/generate-meeting-pdf/${meetingId}/`;
+    }
+    function closeModal() {
+      document.getElementById('pdfModal').style.display = 'none';
+      document.getElementById('modalBackdrop').style.display = 'none';
+    }
+  </script>
+</div>
+{% endblock %}

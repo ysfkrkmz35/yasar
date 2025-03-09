@@ -1,0 +1,43 @@
+{% extends "base_site.html" %}
+{% block content %}
+<h2>Gruplar</h2>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Grup Adı</th>
+            <th>Açıklama</th>
+            <th>Oluşturulma Tarihi</th>
+            <th>Üyeler</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for group in groups %}
+        <tr>
+            <td>{{ group.name }}</td>
+            <td>{{ group.description }}</td>
+            <td>{{ group.created_at|date:"d-m-Y H:i" }}</td>
+            <td>
+                <ul>
+                    {% for member_group in group.members.all %}
+                    <li>
+                        <strong>{{ member_group.member.long_name }}</strong>
+                        - {{ member_group.role_in_group|default:"Üye" }}
+                        {% if member_group.can_create_report %}
+                            (Rapor Oluşturabilir)
+                        {% endif %}
+                    </li>
+                    {% empty %}
+                    <li>Henüz üye yok.</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4">Henüz hiçbir grup oluşturulmadı.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="/">Ana Sayfaya Dön</a>
+{% endblock %}

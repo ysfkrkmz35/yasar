@@ -1,0 +1,42 @@
+{% extends "base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+    <h2>
+        {% if unit %}
+            {{ unit.name }} - Alt Birimler ve Çalışanlar
+        {% else %}
+            Üst Birimler
+        {% endif %}
+    </h2>
+
+    {% if unit %}
+        <a href="{% url 'unit_hierarchy' %}">← Geri</a>
+    {% endif %}
+
+    <div>
+        <h3>Alt Birimler:</h3>
+        <ul>
+            {% for sub_unit in sub_units %}
+                <li>
+                    <a href="{% url 'unit_hierarchy_detail' sub_unit.id %}">{{ sub_unit.name }}</a>
+                </li>
+            {% empty %}
+                <p>Alt birim yok.</p>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div>
+        <h3>Çalışanlar:</h3>
+        <ul>
+            {% for employee in employees %}
+                <li>{{ employee.first_name }} {{ employee.last_name }} ({{ employee.role }})</li>
+            {% empty %}
+                <p>Bu birimde çalışan yok.</p>
+            {% endfor %}
+        </ul>
+    </div>
+
+</div>
+{% endblock %}

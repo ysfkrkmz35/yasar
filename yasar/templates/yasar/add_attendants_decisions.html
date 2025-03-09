@@ -1,0 +1,178 @@
+{% extends "base_site.html" %}
+{% block content %}
+<div class="container mt-4">
+
+  <!-- Hatırlatma Notu -->
+  <div class="alert alert-warning" role="alert">
+    <strong>Hatırlatma:</strong> Bilgi girişleri pdf formatıyla aynı yazılmıştır. Kararlardan önce gündem maddeleri ve katılımcıları girmeyi unutmayın.
+  </div>
+
+  <!-- Dosya Yükleme Bölümü -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h4 class="card-title mb-0">Toplantı Dosyası Yükle</h4>
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'upload_meeting_file' meeting.id %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+          <input type="file" id="meeting-file" name="meeting_file" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Dosya Yükle</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Gündem Maddeleri Bölümü -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h4 class="card-title mb-0">Gündem Maddeleri</h4>
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'add_topic_to_meeting' meeting.id %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="topic-text" class="form-label">Gündem Maddesi:</label>
+          <input type="text" id="topic-text" name="topic_text" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">+ Gündem Maddesi Ekle</button>
+      </form>
+      <hr>
+      <ul class="list-group">
+        {% for topic in topics %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ topic.topic_text }}
+          <form method="post" action="{% url 'delete_topic' topic.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm">Sil</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Kararlar Bölümü -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h4 class="card-title mb-0">Kararlar</h4>
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'add_decision' meeting.id %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="decision-topic-group" class="form-label">Konu Grubu:</label>
+          <input type="text" id="decision-topic-group" name="topic_group" class="form-control" placeholder="Konu grubunu yazın" required>
+        </div>
+        <div class="mb-3">
+          <label for="decision-text" class="form-label">Karar Metni:</label>
+          <textarea id="decision-text" name="decision_text" class="form-control" placeholder="Karar metni girin" required></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="decision-status" class="form-label">Durum:</label>
+          <select id="decision-status" name="decision_status" class="form-select" required>
+            <option value="finalized">Kesinleşti</option>
+            <option value="pending">Beklemede</option>
+            <option value="cancelled">İptal Edildi</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="responsible-select" class="form-label">Sorumlu:</label>
+          <select id="responsible-select" name="responsible" class="form-select">
+            <option value="">-- Sorumlu Seç --</option>
+            {% for attendant in attendants %}
+            <option value="{{ attendant.member.id }}">
+              {{ attendant.member.first_name }} {{ attendant.member.last_name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="topic-select" class="form-label">Gündem Maddesi:</label>
+          <select id="topic-select" name="meeting_topic" class="form-select">
+            <option value="">-- Gündem Maddesi Seç --</option>
+            {% for topic in topics %}
+            <option value="{{ topic.id }}">{{ topic.topic_text }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">+ Karar Ekle</button>
+      </form>
+      <hr>
+      <ul class="list-group">
+        {% for decision in decisions %}
+        <li class="list-group-item">
+          <strong>Konu Grubu:</strong> {{ decision.topic_group }} - {{ decision.decision_text }}
+          (<em>{{ decision.get_decision_status_display }}</em>)
+          {% if decision.responsible %}
+          - <strong>Sorumlu:</strong> {{ decision.responsible.first_name }} {{ decision.responsible.last_name }}
+          {% else %}
+          - <strong>Sorumlu:</strong> Belirtilmemiş
+          {% endif %}
+          <form method="post" action="{% url 'delete_decision' decision.id %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm">Sil</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Katılımcılar Bölümü -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h4 class="card-title mb-0">Katılımcılar</h4>
+    </div>
+    <div class="card-body">
+      <div class="mb-3">
+        <form method="post" action="{% url 'add_attendant' meeting.id %}" class="d-flex align-items-center">
+          {% csrf_token %}
+          <label for="employee-select" class="form-label me-2">Misafir Katılımcı:</label>
+          <select id="employee-select" name="member_id" class="form-select me-2">
+            <option value="">-- Misafir Seç --</option>
+            {% for employee in employees %}
+            <option value="{{ employee.id }}">{{ employee.first_name }} {{ employee.last_name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-primary">+ Misafir Katılımcı Ekle</button>
+        </form>
+      </div>
+      <div class="mb-3">
+        <form method="post" action="{% url 'add_group_to_meeting' meeting.id %}" class="d-flex align-items-center">
+          {% csrf_token %}
+          <label for="group-select" class="form-label me-2">Grup Seç:</label>
+          <select id="group-select" name="group_id" class="form-select me-2" required>
+            <option value="">-- Grup Seç --</option>
+            {% for group in groups %}
+            <option value="{{ group.id }}">{{ group.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-primary">+ Grup Ekle</button>
+        </form>
+      </div>
+      <ul class="list-group">
+        {% for attendant in attendants %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ attendant.member.first_name }} {{ attendant.member.last_name }}
+          <form method="post" action="{% url 'delete_attendant' attendant.id %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm">Sil</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- İşlem Düğmeleri -->
+  <div class="d-flex justify-content-between mb-4">
+    <a href="/" class="btn btn-success">Tamamla</a>
+    <form method="post" action="{% url 'cancel_meeting' meeting.id %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-secondary">İptal Et</button>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

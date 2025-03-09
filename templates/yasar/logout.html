@@ -1,0 +1,24 @@
+{% extends "base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    {% if request.was_staff %}
+        <a title="Go to Home Page" href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    {% else %}
+        <a title="Go to Home Page" href="/">{% trans 'Home' %} &rsaquo;</a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+
+<p>{% trans "Web Sitemizi ziyaret ettiğiniz için teşekkür ederiz." %}</p>
+
+{% if request.was_staff %}
+    <p><a href="{% url 'admin:index' %}">{% trans 'Log in again' %}</a></p>
+{% else %}
+    <p><a href="/login/">{% trans 'Log in again' %}</a></p>
+{% endif %}
+
+{% endblock %}
