@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ meeting.meeting_name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2, h3 { margin-bottom: 10px; }
+        ul { list-style-type: none; padding: 0; margin: 0; }
+        ul li { margin-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .participant-box { border: 1px solid #000; padding: 10px; margin-bottom: 10px; }
+        .footer { position: fixed; bottom: 20px; left: 20px; font-size: 10px; }
+    </style>
+</head>
+<body>
+    <h1>{{ meeting.meeting_name }}</h1>
+    <p><strong>Toplantı Tarihi:</strong> {{ meeting.date|date:"d/m/Y H:i" }}</p>
+    <p><strong>Oluşturan:</strong> {{ meeting.created_by.first_name }} {{ meeting.created_by.last_name }}</p>
+
+    <h2>Gündem Maddeleri</h2>
+    <ul>
+        {% for topic in meeting.topics.all %}
+        <li>{{ forloop.counter }}. {{ topic.topic_text }}</li>
+        {% empty %}
+        <p>Henüz gündem maddesi eklenmemiş.</p>
+        {% endfor %}
+    </ul>
+
+    <h2>Kararlar</h2>
+    <ul>
+        {% for decision in decisions %}
+        <li>
+            {{ forloop.counter }}. <strong>{{ decision.topic_group }}</strong>: {{ decision.decision_text }}
+            (Durum: {{ decision.get_decision_status_display }},
+            Sorumlu:
+            {% if decision.responsible %}
+                {{ decision.responsible.first_name }} {{ decision.responsible.last_name }}
+            {% else %}
+                Yok
+            {% endif %})
+        </li>
+        {% empty %}
+        <p>Henüz karar eklenmemiş.</p>
+        {% endfor %}
+    </ul>
+
+    <h2>Katılımcılar</h2>
+    <div class="participant-box">
+        {% for attendant in attendants %}
+        <p>
+            {{ attendant.member.first_name }} {{ attendant.member.last_name }} - {{ attendant.member.title }}
+            <span style="float: right; border: 1px solid #000; width: 100px; height: 20px;"></span>
+        </p>
+        {% empty %}
+        <p>Henüz katılımcı eklenmemiş.</p>
+        {% endfor %}
+    </div>
+
+     <div class="footer">
+        <p>Dağıtım:<br>Rektörlük</p>
+        <ul>
+            {% for attendant in attendants %}
+            <li>{{ attendant.member.first_name }} {{ attendant.member.last_name }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
+</body>
+</html>

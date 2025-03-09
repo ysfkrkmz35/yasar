@@ -1,0 +1,366 @@
+{% extends "base_site.html" %}
+
+{% block content %}
+<h2>{{ meeting.meeting_name }} için Katılımcı ve Karar Ekle</h2>
+<p>Toplantı Tarihi: {{ meeting.date|date:"d/m/Y H:i" }}</p>
+
+<!-- Dosya Yükleme Bölümü -->
+<div>
+    <h3>Toplantı Dosyası Yükle</h3>
+    <form id="upload-meeting-file-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" id="meeting-file" name="meeting_file">
+        <button type="button" id="upload-meeting-file-btn" class="btn btn-primary">Dosya Yükle</button>
+    </form>
+</div>
+
+<!-- Gündem Maddeleri Bölümü -->
+<div>
+    <h3>Gündem Maddeleri</h3>
+    <form id="add-topic-form">
+        {% csrf_token %}
+        <div>
+            <label for="topic-text">Gündem Maddesi:</label>
+            <input type="text" id="topic-text" name="topic_text" placeholder="Gündem maddesi yazın" required>
+            <button type="button" id="add-topic-btn" class="btn btn-primary">+ Gündem Maddesi Ekle</button>
+        </div>
+    </form>
+    <ul id="topics-list">
+        {% for topic in topics %}
+        <li>
+            {{ topic.topic_text }}
+            <button type="button" class="btn btn-danger btn-sm delete-topic-btn" data-id="{{ topic.id }}">Sil</button>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- Kararlar Bölümü -->
+<div>
+    <h3>Kararlar</h3>
+    <form id="add-decision-form">
+        {% csrf_token %}
+        <label for="decision-topic-group">Konu Grubu:</label>
+        <input type="text" id="decision-topic-group" name="topic_group" required>
+
+        <label for="decision-status">Durum:</label>
+        <select id="decision-status" name="decision_status" required>
+            <option value="finalized">Kesinleşti</option>
+            <option value="pending">Beklemede</option>
+            <option value="cancelled">İptal Edildi</option>
+        </select>
+
+        <label for="decision-text">Karar Metni:</label>
+        <textarea id="decision-text" name="decision_text" required></textarea>
+
+        <label for="decision-responsible">Sorumlu:</label>
+        <select id="decision-responsible" name="responsible">
+          <option value="">-- Sorumlu Seç --</option>
+          {% for attendant in attendants %}
+           <option value="{{ attendant.member.id }}">
+           {{ attendant.member.first_name }} {{ attendant.member.last_name }}
+           </option>
+          {% endfor %}
+        </select>
+
+        <label for="decision-topic">Gündem Maddesi:</label>
+        <select id="decision-topic" name="meeting_topic">
+          <option value="">-- Gündem Maddesi Seç --</option>
+          {% for topic in topics %}
+          <option value="{{ topic.id }}">{{ topic.topic_text }}</option>
+          {% endfor %}
+        </select>
+
+        <button type="button" id="add-decision-btn" class="btn btn-primary">+ Karar Ekle</button>
+    </form>
+
+    <ul id="decisions-list">
+        {% for decision in decisions %}
+        <li>
+            {{ decision.topic_group }} - {{ decision.decision_text }} ({{ decision.get_decision_status_display }})
+            {% if decision.responsible %}
+                - Sorumlu: {{ decision.responsible.first_name }} {{ decision.responsible.last_name }}
+            {% else %}
+                - Sorumlu: Belirtilmemiş
+            {% endif %}
+            <button type="button" class="btn btn-danger btn-sm delete-decision-btn" data-id="{{ decision.id }}">Sil</button>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- Katılımcılar Bölümü -->
+<div>
+    <h3>Katılımcılar</h3>
+    <form id="add-attendant-form">
+        {% csrf_token %}
+        <div>
+            <label for="add-group">Grup Ekle:</label>
+            <select id="add-group">
+                <option value="">-- Grup Seçin --</option>
+                {% for group in groups %}
+                <option value="{{ group.id }}">{{ group.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" id="add-group-btn" class="btn btn-primary">+ Grup Ekle</button>
+        </div>
+        <div>
+            <label for="attendant-member">Misafir Katılımcı:</label>
+            <select id="attendant-member" name="member">
+                {% for employee in employees %}
+                <option value="{{ employee.id }}">{{ employee.first_name }} {{ employee.last_name }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" id="add-attendant-btn" class="btn btn-primary">+ Misafir Katılımcı Ekle</button>
+        </div>
+    </form>
+    <ul id="attendants-list">
+        {% for attendant in attendants %}
+        <li>
+            {{ attendant.member.first_name }} {{ attendant.member.last_name }}
+            <button type="button" class="btn btn-danger btn-sm delete-attendant-btn" data-id="{{ attendant.id }}">Sil</button>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+
+<!-- İşlem Düğmeleri -->
+<a href="/" class="btn btn-success">Tamamla</a>
+<button type="button" id="cancel-meeting-btn" class="btn btn-secondary">İptal Et</button>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const csrfToken = "{{ csrf_token }}";
+
+    // Grup Ekleme İşlevi
+    document.getElementById('add-group-btn').addEventListener('click', function() {
+        const groupId = document.getElementById('add-group').value;
+        if (!groupId) {
+            alert("Lütfen bir grup seçin!");
+            return;
+        }
+
+        fetch("{% url 'add_group_to_meeting' meeting.id %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({ group_id: groupId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Grup katılımcılar listesine eklendi!");
+                location.reload(); // Sayfayı yenile
+            } else {
+                alert("Hata: " + data.error);
+            }
+        })
+        .catch(error => console.error("Grup ekleme sırasında hata oluştu:", error));
+    });
+
+    // Misafir Katılımcı Ekleme
+    document.getElementById('add-attendant-btn').addEventListener('click', function() {
+        const memberId = document.getElementById('attendant-member').value;
+        fetch("{% url 'add_attendant' meeting.id %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({ member: memberId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Sayfayı yenile
+            } else {
+                alert("Hata: " + JSON.stringify(data.errors));
+            }
+        })
+        .catch(error => console.error("Katılımcı ekleme sırasında hata oluştu:", error));
+    });
+
+    // Katılımcı Silme
+    document.querySelectorAll('.delete-attendant-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const attendantId = this.getAttribute('data-id');
+            fetch(`{% url 'delete_attendant' 0 %}`.replace('0', attendantId), {
+                method: "DELETE",
+                headers: {
+                    "X-CSRFToken": csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); // Sayfayı yenile
+                } else {
+                    alert("Hata: " + data.error);
+                }
+            })
+            .catch(error => console.error("Silme işlemi sırasında hata oluştu:", error));
+        });
+    });
+
+    // İptal Et İşlevi
+    document.getElementById('cancel-meeting-btn').addEventListener('click', function() {
+        if (confirm("Bu toplantıyı iptal etmek istediğinize emin misiniz?")) {
+            fetch("{% url 'cancel_meeting' meeting.id %}", {
+                method: "DELETE",
+                headers: {
+                    "X-CSRFToken": csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Toplantı iptal edildi!");
+                    window.location.href = "/";  // Ana sayfaya yönlendirme
+                } else {
+                    alert("Hata: " + data.error);
+                }
+            })
+            .catch(error => console.error("Toplantıyı iptal etme sırasında hata oluştu:", error));
+        }
+    });
+
+    //karar ekle işlemi
+    document.getElementById('add-decision-btn').addEventListener('click', function() {
+    const topicGroup = document.getElementById('decision-topic-group').value;
+    const decisionStatus = document.getElementById('decision-status').value;
+    const decisionText = document.getElementById('decision-text').value;
+    const responsible = document.getElementById('decision-responsible').value;
+
+    fetch("{% url 'add_decision' meeting.id %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken
+        },
+        body: JSON.stringify({
+            topic_group: topicGroup,
+            decision_status: decisionStatus,
+            decision_text: decisionText,
+            responsible: responsible
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload(); // Sayfayı yenile
+        } else {
+            alert("Hata: " + JSON.stringify(data.errors));
+        }
+    })
+    .catch(error => console.error("Karar ekleme sırasında hata oluştu:", error));
+    });
+
+    //eklenen kararı sil işlemi
+    document.querySelectorAll('.delete-decision-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const decisionId = this.getAttribute('data-id'); // Silinecek kararın ID'sini al
+        fetch(`{% url 'delete_decision' 0 %}`.replace('0', decisionId), {
+            method: "DELETE",
+            headers: {
+                "X-CSRFToken": csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Sayfayı yenile
+            } else {
+                alert("Hata: " + data.error);
+            }
+        })
+        .catch(error => console.error("Silme işlemi sırasında hata oluştu:", error));
+    });
+    });
+});
+   //gündem maddesi ekleme eventi
+    document.addEventListener('DOMContentLoaded', () => {
+        const csrfToken = "{{ csrf_token }}";
+
+        // Gündem Maddesi Ekleme İşlevi
+        document.getElementById('add-topic-btn').addEventListener('click', function () {
+            const topicText = document.getElementById('topic-text').value;
+
+            if (!topicText.trim()) {
+                alert("Lütfen bir gündem maddesi girin!");
+                return;
+            }
+
+            fetch("{% url 'add_topic_to_meeting' meeting.id %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ topic_text: topicText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Gündem maddesi başarıyla eklendi!");
+                    location.reload(); // Sayfayı yenile
+                } else {
+                    alert("Hata: " + data.error);
+                }
+            })
+            .catch(error => console.error("Gündem maddesi ekleme sırasında hata oluştu:", error));
+        });
+
+        // Gündem Maddesi Silme İşlevi
+        document.querySelectorAll('.delete-topic-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const topicId = this.getAttribute('data-id');
+
+                fetch(`{% url 'delete_topic' 0 %}`.replace('0', topicId), {
+                    method: "DELETE",
+                    headers: {
+                        "X-CSRFToken": csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Gündem maddesi başarıyla silindi!");
+                        location.reload(); // Sayfayı yenile
+                    } else {
+                        alert("Hata: " + data.error);
+                    }
+                })
+                .catch(error => console.error("Gündem maddesi silme sırasında hata oluştu:", error));
+            });
+        });
+
+        //toplantıya dosya yükleme işlemi
+        document.getElementById('upload-meeting-file-btn').addEventListener('click', function() {
+            const fileInput = document.getElementById('meeting-file');
+            const formData = new FormData();
+            formData.append('meeting_file', fileInput.files[0]);
+
+            fetch("{% url 'upload_meeting_file' meeting.id %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    alert("Hata: " + data.error);
+                }
+            })
+            .catch(error => console.error("Dosya yükleme sırasında hata oluştu:", error));
+        });
+});
+</script>
+{% endblock %}

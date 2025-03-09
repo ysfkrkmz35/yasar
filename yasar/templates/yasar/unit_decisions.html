@@ -1,0 +1,99 @@
+{% extends "base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+    <h2>{{ unit.name }} - Kararlar</h2>
+    
+    <form method="GET" action="{% url 'unit_decisions' unit.id %}">
+    <label for="topic_group">Konu Grubu:</label>
+    <input type="text" id="topic_group" name="topic_group" placeholder="Konu Grubu" value="{{ request.GET.topic_group }}">
+
+    <label for="responsible_first_name">Sorumlu İsim:</label>
+    <input type="text" id="responsible_first_name" name="responsible_first_name" placeholder="Sorumlu İsim" value="{{ request.GET.responsible_first_name }}">
+
+    <label for="responsible_last_name">Sorumlu Soyisim:</label>
+    <input type="text" id="responsible_last_name" name="responsible_last_name" placeholder="Sorumlu Soyisim" value="{{ request.GET.responsible_last_name }}">
+
+    <label for="meeting_name">Toplantı Adı:</label>
+    <input type="text" id="meeting_name" name="meeting_name" placeholder="Toplantı Adı" value="{{ request.GET.meeting_name }}">
+
+    <label for="date">Tarih:</label>
+    <input type="date" id="date" name="date" value="{{ request.GET.date }}">
+
+    <button type="submit">Ara</button>
+    </form>
+
+    <div>
+        <h3>Durumu Beklemede Olan Kararlar</h3>
+        <ul>
+            {% for decision in pending_decisions %}
+                <li>
+                    <strong>Konu Grubu:</strong> {{ decision.topic_group }}<br>
+                    <strong>Açıklama:</strong> {{ decision.decision_text }}<br>
+                    <strong>Sorumlu:</strong> 
+                    {% if decision.responsible %}
+                        {{ decision.responsible.first_name }} {{ decision.responsible.last_name }}
+                    {% else %}
+                        Belirtilmemiş
+                    {% endif %}
+                    <br>
+                    <strong>Toplantı:</strong> {{ decision.meeting.meeting_name }}<br>
+                    <strong>Tarih:</strong> {{ decision.meeting.date|date:"d/m/Y H:i" }}
+                </li>
+            {% empty %}
+                <p>Durumu beklemede olan karar bulunamadı.</p>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div>
+        <h3>Tamamlanan Kararlar</h3>
+        <ul>
+            {% for decision in finalized_decisions %}
+                <li>
+                    <strong>Konu Grubu:</strong> {{ decision.topic_group }}<br>
+                    <strong>Açıklama:</strong> {{ decision.decision_text }}<br>
+                    <strong>Sorumlu:</strong> 
+                    {% if decision.responsible %}
+                        {{ decision.responsible.first_name }} {{ decision.responsible.last_name }}
+                    {% else %}
+                        Belirtilmemiş
+                    {% endif %}
+                    <br>
+                    <strong>Toplantı:</strong> {{ decision.meeting.meeting_name }}<br>
+                    <strong>Tarih:</strong> {{ decision.meeting.date|date:"d/m/Y H:i" }}
+                </li>
+            {% empty %}
+                <p>Tamamlanan karar bulunamadı.</p>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div>
+        <h3>İptal Edilen Kararlar</h3>
+        <ul>
+            {% for decision in cancelled_decisions %}
+                <li>
+                    <strong>Konu Grubu:</strong> {{ decision.topic_group }}<br>
+                    <strong>Açıklama:</strong> {{ decision.decision_text }}<br>
+                    <strong>Sorumlu:</strong> 
+                    {% if decision.responsible %}
+                        {{ decision.responsible.first_name }} {{ decision.responsible.last_name }}
+                    {% else %}
+                        Belirtilmemiş
+                    {% endif %}
+                    <br>
+                    <strong>Toplantı:</strong> {{ decision.meeting.meeting_name }}<br>
+                    <strong>Tarih:</strong> {{ decision.meeting.date|date:"d/m/Y H:i" }}
+                </li>
+            {% empty %}
+                <p>İptal edilen karar bulunamadı.</p>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div>
+        <a href="{% url 'unit_hierarchy_detail' unit.id %}" style="float: right;">← Geri</a>
+    </div>
+</div>
+{% endblock %}

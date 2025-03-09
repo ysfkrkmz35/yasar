@@ -1,0 +1,159 @@
+{% extends "base_site.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-center mb-4">Yeni Grup Kur</h2>
+
+  {% if error_message %}
+  <div class="alert alert-danger" role="alert">
+      {{ error_message }}
+  </div>
+  {% endif %}
+
+  <div class="card shadow mb-4">
+    <div class="card-body">
+      <form method="POST" action="{% url 'create_group' %}">
+        {% csrf_token %}
+        <!-- Grup Adı ve Açıklama -->
+        <div class="mb-3">
+          <label for="group_name" class="form-label">Grup Adı:</label>
+          <input type="text" id="group_name" name="group_name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label for="description" class="form-label">Açıklama:</label>
+          <textarea id="description" name="description" class="form-control" rows="3"></textarea>
+        </div>
+
+        <!-- Mevcut Çalışanlar ve Rol Seçimi -->
+        <div class="mb-3">
+          <h3 class="h5">Mevcut Çalışanlar</h3>
+          <div class="row g-2 mb-2">
+            <div class="col-md-6">
+              <input type="text" id="search-employees" class="form-control" placeholder="Çalışan Ara" onkeyup="filterEmployees()">
+            </div>
+            <div class="col-md-3">
+              <select id="role" class="form-select">
+                {% for value, label in role_choices %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <button type="button" id="add-to-group" class="btn btn-success w-100">Ekle</button>
+            </div>
+          </div>
+          <!-- Mevcut çalışanlar çok satırlı liste şeklinde -->
+          <select id="available-employees" class="form-select" size="5" multiple>
+            {% for employee in employees %}
+            <option value="{{ employee.id }}">{{ employee.long_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Grup Üyeleri Tablosu -->
+        <div class="mb-3">
+          <h3 class="h5">Grup Üyeleri</h3>
+          <div class="table-responsive">
+            <table class="table table-bordered" id="group-members">
+              <thead class="table-light">
+                <tr>
+                  <th>Çalışan</th>
+                  <th>Rol</th>
+                  <th>Eylem</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Üyeler buraya JavaScript ile eklenecek -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Form Butonları -->
+        <div class="d-flex justify-content-between">
+          <button type="submit" class="btn btn-primary">Tamamla</button>
+          <a href="/" class="btn btn-secondary">İptal</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript Kısmı -->
+<script>
+  // Çalışanları filtreleme
+  function filterEmployees() {
+    const input = document.getElementById('search-employees');
+    const filter = input.value.toLowerCase();
+    const options = document.getElementById('available-employees').options;
+
+    for (let i = 0; i < options.length; i++) {
+      const text = options[i].text.toLowerCase();
+      options[i].style.display = text.includes(filter) ? '' : 'none';
+    }
+  }
+
+  // Çalışanları gruba ekleme
+  document.getElementById('add-to-group').addEventListener('click', function() {
+    const available = document.getElementById('available-employees');
+    const role = document.getElementById('role').value;
+    const roleText = document.getElementById('role').options[document.getElementById('role').selectedIndex].text;
+    const groupMembers = document.getElementById('group-members').querySelector('tbody');
+
+    [...available.selectedOptions].forEach(option => {
+      const row = document.createElement('tr');
+
+      // Çalışan adı hücresi
+      const nameCell = document.createElement('td');
+      nameCell.textContent = option.text;
+      nameCell.setAttribute('data-id', option.value); // Çalışan ID'sini sakla
+      row.appendChild(nameCell);
+
+      // Rol hücresi
+      const roleCell = document.createElement('td');
+      roleCell.textContent = roleText;
+      row.appendChild(roleCell);
+
+      // Eylem hücresi: Çıkar butonu
+      const actionCell = document.createElement('td');
+      const removeButton = document.createElement('button');
+      removeButton.textContent = 'Çıkar';
+      removeButton.type = 'button';
+      removeButton.classList.add('btn', 'btn-danger', 'btn-sm');
+      removeButton.onclick = () => {
+        groupMembers.removeChild(row);
+        available.appendChild(option);
+      };
+      actionCell.appendChild(removeButton);
+      row.appendChild(actionCell);
+
+      // Oluşturulan satırı ekle ve seçili seçeneği listeden kaldır
+      groupMembers.appendChild(row);
+      option.remove();
+    });
+  });
+
+  // Form gönderiminde çalışan ve rol bilgilerini gizli alanlara ekle
+  document.querySelector('form').addEventListener('submit', function() {
+    const groupMembers = document.getElementById('group-members').querySelectorAll('tbody tr');
+    const form = this;
+
+    groupMembers.forEach(row => {
+      const employeeId = row.querySelector('td[data-id]').getAttribute('data-id');
+      const role = row.children[1].textContent;
+
+      const hiddenEmployeeInput = document.createElement('input');
+      hiddenEmployeeInput.type = 'hidden';
+      hiddenEmployeeInput.name = 'employees';
+      hiddenEmployeeInput.value = employeeId;
+
+      const hiddenRoleInput = document.createElement('input');
+      hiddenRoleInput.type = 'hidden';
+      hiddenRoleInput.name = 'roles';
+      hiddenRoleInput.value = role;
+
+      form.appendChild(hiddenEmployeeInput);
+      form.appendChild(hiddenRoleInput);
+    });
+  });
+</script>
+{% endblock %}
