@@ -1,22 +1,68 @@
 {% extends "base_site.html" %}
 {% load i18n static yasar_filters %}
 
-<link rel="stylesheet" type="text/css" href="{% static 'admin/css/dashboard.css' %}" />
-
-{% block viewsite %}{% endblock %}
+{% block title %}Anasayfa - Yaşar Üniversitesi{% endblock %}
 
 {% block breadcrumbs %}{% endblock %}
 
 {% block content %}
-<div id="content-main" class="container">
-    <div class="app-module">
-        <h2>Yaşar Üniversitesi'ne Hoş Geldiniz...</h2>
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <i>Hazırlık Çalışmaları Sürüyor...</i>
+<div class="container py-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h1 class="card-title display-5 mb-4">Yaşar Üniversitesi'ne Hoş Geldiniz</h1>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Portalımız için hazırlık çalışmaları devam ediyor. Yakında daha zengin içeriklerle hizmetinizde olacağız.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
+                        <a href="#" class="btn btn-primary px-4">Fakülteler</a>
+                        <a href="#" class="btn btn-outline-secondary px-4">Etkinlikler</a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="position-relative">
+                        <img class="img-fluid rounded shadow" src="{% static 'yasar/images/uni.jpg' %}" alt="Yaşar Üniversitesi Kampüsü">
+                        <div class="position-absolute bottom-0 end-0 p-3 bg-white bg-opacity-75 rounded-start">
+                            <small class="text-muted">Selçuk Yaşar Kampüsü, 2025</small>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6">
-                <img class="img-fluid" src="{% static 'yasar/images/uni.jpg' %}" alt="Site">
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Duyurular</h5>
+                    <p class="card-text text-muted">Henüz duyuru bulunmamaktadır.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Yaklaşan Etkinlikler</h5>
+                    <p class="card-text text-muted">Henüz etkinlik bulunmamaktadır.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Hızlı Erişim</h5>
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action">Toplantılar</a>
+                        <a href="#" class="list-group-item list-group-item-action">Kararlar</a>
+                        <a href="#" class="list-group-item list-group-item-action">Yeni Toplantı Oluştur</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
