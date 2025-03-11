@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
 {% get_current_language_bidi as LANGUAGE_BIDI %}
-<html lang="{{ LANGUAGE_CODE|default:"en-us" }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
+<html lang="{{ LANGUAGE_CODE|default:'en-us' }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -13,42 +13,76 @@
     
     {% block extra_css %}
       <style>
-        /* Sidebar fixed: header yüksekliğinden sonra başlasın (örneğin 70px) */
+        /* Sidebar styles with improved responsiveness */
         #sidebar {
             position: fixed;
-            top: 70px; /* Header yüksekliği */
+            top: 70px; /* Header height */
             left: 0;
             width: 250px;
             height: calc(100vh - 70px);
             background-color: #f8f9fa;
             overflow-y: auto;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
             z-index: 1000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        /* Ana içerik, sidebar genişliği kadar sola kaydırılıyor */
+        
+        /* Main content area */
         #content {
             margin-left: 250px;
             transition: margin-left 0.3s ease;
+            min-height: calc(100vh - 70px - 56px); /* viewport height minus header and footer */
+        }
+        
+        /* Toggle button visibility based on sidebar state */
+        #sidebarToggle {
+            transition: left 0.3s ease;
+        }
+        
+        /* Responsive adjustments for mobile */
+        @media (max-width: 991.98px) {
+            #sidebar {
+                transform: translateX(-100%);
+                box-shadow: none;
+            }
+            
+            #content {
+                margin-left: 0;
+            }
+            
+            #sidebar.active {
+                transform: translateX(0);
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+            
+            /* More space for content on smaller screens */
+            .container {
+                max-width: 100%;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
         }
       </style>
     {% endblock %}
 </head>
 <body>
     <!-- Header / Navbar -->
-    <header class="navbar navbar-expand-lg navbar-light bg-light border-bottom py-3">
-        <div class="container d-flex align-items-center justify-content-between">
-            <!-- Branding: base_site.html'den override edilebilir -->
+    <header class="navbar navbar-expand-lg navbar-light bg-light border-bottom py-3 sticky-top">
+        <div class="container">
+            <!-- Branding: can be overridden in base_site.html -->
             <a class="navbar-brand d-flex align-items-center" href="/">
                 {% block branding %}
                     {% trans "Site Adı" %}
                 {% endblock %}
             </a>
-            <!-- Navbar Toggle (Mobil) -->
+            
+            <!-- Navbar Toggle (Mobile) -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="{% trans 'Toggle navigation' %}">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <!-- Navigation & Usertools -->
+            
+            <!-- Navigation & User tools -->
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 {% block navigation %}
                 <ul class="navbar-nav">
@@ -68,20 +102,29 @@
                     {% endif %}
                 </ul>
                 {% endblock %}
+                
                 {% block usertools %}
                 <ul class="navbar-nav ms-3">
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <span class="navbar-text">
-                                {% trans "Hoş geldiniz," %} <strong>{{ user.get_username }}</strong>
-                            </span>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/logout/?next=/">{% trans "Oturum Kapat" %}</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <span>{{ user.get_username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="/profile/">{% trans "Profil" %}</a></li>
+                                {% if user.is_staff %}
+                                    <li><a class="dropdown-item" href="/admin/">{% trans "Yönetim" %}</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/logout/?next=/">{% trans "Oturum Kapat" %}</a></li>
+                            </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="/login/?next=/">{% trans "Oturum Aç" %}</a>
+                            <a class="nav-link btn btn-outline-primary btn-sm" href="/login/?next=/">
+                                {% trans "Oturum Aç" %}
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
@@ -91,10 +134,13 @@
     </header>
     <!-- END Header / Navbar -->
 
-    <!-- Toggle Button (fixed, sidebar'dan bağımsız) -->
-    <button class="btn btn-primary" id="sidebarToggle" style="position: fixed; top: 80px; left: 10px; z-index: 1100;">☰ Menü</button>
+    <!-- Toggle Button (fixed) -->
+    <button class="btn btn-primary btn-sm" id="sidebarToggle" 
+            style="position: fixed; top: 80px; left: 10px; z-index: 1100;">
+        <span class="navbar-toggler-icon" style="font-size: 0.75rem;"></span>
+    </button>
 
-    <!-- Fixed Sidebar (sol kenarda, header'ın hemen altından başlar) -->
+    <!-- Fixed Sidebar -->
     <div id="sidebar">
         {% include "yasar/side_bar.html" %}
     </div>
@@ -114,11 +160,11 @@
             </nav>
             {% endblock %}
 
-            <!-- Mesajlar -->
+            <!-- Messages -->
             {% block messages %}
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="alert alert-{{ message.tags|default:"info" }} alert-dismissible fade show" role="alert">
+                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
                             {{ message|capfirst }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
@@ -126,7 +172,7 @@
                 {% endif %}
             {% endblock %}
 
-            <!-- İçerik -->
+            <!-- Content -->
             {% block content %}{% endblock %}
         </main>
     </div>
@@ -136,7 +182,7 @@
     <footer class="bg-light py-3 border-top text-center small">
         <div class="container">
             {% block footer %}
-                &copy; {{ current_year|default:"2025" }} {% trans "Site Adı" %}
+                &copy; {% now "Y" %} {% trans "Site Adı" %}
             {% endblock %}
         </div>
     </footer>
@@ -144,6 +190,51 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Default sidebar toggle functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const content = document.getElementById('content');
+            
+            // Toggle sidebar visibility
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+                
+                // For desktop view: adjust content margin
+                if (window.innerWidth >= 992) {
+                    if (content.style.marginLeft === '0px') {
+                        content.style.marginLeft = '250px';
+                        sidebarToggle.style.left = '260px';
+                    } else {
+                        content.style.marginLeft = '0px';
+                        sidebarToggle.style.left = '10px';
+                    }
+                }
+            });
+            
+            // Handle responsive behavior on window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth < 992) {
+                    content.style.marginLeft = '0px';
+                    sidebarToggle.style.left = '10px';
+                    sidebar.classList.remove('active');
+                } else {
+                    if (!sidebar.classList.contains('active')) {
+                        content.style.marginLeft = '250px';
+                        sidebarToggle.style.left = '260px';
+                    }
+                }
+            });
+            
+            // Initial state for mobile
+            if (window.innerWidth < 992) {
+                content.style.marginLeft = '0px';
+                sidebar.classList.remove('active');
+            }
+        });
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>
